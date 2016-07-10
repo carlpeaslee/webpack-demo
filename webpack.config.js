@@ -5,6 +5,7 @@ const validate = require('webpack-validator');
 
 const parts = require('./libs/parts');
 
+
 const PATHS = {
   app: path.join(__dirname, 'app'),
   style: [
@@ -15,23 +16,73 @@ const PATHS = {
 };
 
 const common = {
-// Entry accepts a path or an object of entries.
-// We'll be using the latter form given it's
-// convenient with more complex configurations.
-entry: {
+  // Entry accepts a path or an object of entries.
+  // We'll be using the latter form given it's
+  // convenient with more complex configurations.
+  module: {
+    preLoaders: [
+      {
+        test: /\.jsx?$/,
+        loaders: ['eslint'],
+        include: PATHS.app
+        // define an include so we check just the files we need include: PATHS.app
+      }
+    ],
+    loaders: [
+      {
+        test: /\.jsx?$/,
+        loaders: ['babel?cacheDirectory'],
+        include: PATHS.app
+      },
+      {
+        test: /\.scss$/,
+        loaders: ['style', 'css', 'sass'],
+        include: PATHS.style
+      },
+      {
+        test: /\.(jpg|png)$/,
+        loader: 'url?limit=25000',
+        include: PATHS.images
+      },
+      {
+        test: /\.woff$/,
+        // Inline small woff files and output them below font/.
+        // Set mimetype just in case.
+        loader: 'url',
+        query: {
+            name: 'font/[hash].[ext]',
+            limit: 5000,
+            mimetype: 'application/font-woff'
+        },
+          include: PATHS.fonts
+        },
+        {
+          test: /\.ttf$|\.eot$/,
+          loader: 'file',
+          query: {
+            name: 'font/[hash].[ext]'
+          },
+          include: PATHS.fonts
+        }
+    ]
+  },
+  entry: {
     style: PATHS.style,
     app: PATHS.app
   },
   output: {
     path: PATHS.build,
     // Tweak this to match your GitHub project name
-    publicPath: '/webpack-demo/'
+    publicPath: '/webpack-demo/',
     filename: '[name].js'
   }, plugins: [
     new HtmlWebpackPlugin({
     title: 'Webpack demo'
     })
-  ]
+  ],
+  resolve: {
+    extensions: ['', '.js', '.jsx']
+  }
 };
 
 var config;
@@ -79,7 +130,6 @@ switch(process.env.npm_lifecycle_event) {
       })
     );
 }
-
 
 // Run validator in quiet mode to avoid output in stats
 module.exports = validate(config, {
